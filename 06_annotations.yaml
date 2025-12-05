@@ -5,7 +5,7 @@ metadata:
   annotations:
     jenkins.url: "http://joindevops/build/job/5"
     imageregistory: "http://hub.docker.com"
-  spec:
-    containers:
-    - name: nginx
-      image: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
