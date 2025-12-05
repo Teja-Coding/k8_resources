@@ -5,8 +5,10 @@ metadata:
   labels:
     purpose: multi-container
 spec:
-  - name: nginx
-    image: nginx
-  - name: almalinux
-    image: almalinux:9
-    command: ["sleep","1000"]
+  containers:
+    - name: nginx
+      image: nginx
+
+    - name: almalinux
+      image: almalinux:9
+      command: ["sleep", "1000"]
