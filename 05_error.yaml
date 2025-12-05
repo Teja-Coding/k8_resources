@@ -4,5 +4,7 @@
     name: error-testing
   spec:
     containers:
-    - name: nginx
-      image: nginxxx
+    - name: almalinux
+      image: almalinux:9
+    # - name: nginx
+    #   image: nginxxx
