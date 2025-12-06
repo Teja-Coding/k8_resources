@@ -8,4 +8,4 @@ spec:
     image: nginx
     envFrom:
     - configMapRef:
-      name: podconfig
+      name: podconfig -n roboshop
