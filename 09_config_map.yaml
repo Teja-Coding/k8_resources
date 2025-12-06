@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pid-Config
+  name: podconfig
 data:
   database_url: "jdbc:mysql://mysql-service:3306/mydb"
   app_environment: "production"
   log_level: "INFO"
-  # You can also store multi-line data using the | (literal) or > (folded) style
   config.json: |
     {
       "featureFlags": {
