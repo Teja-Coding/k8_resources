@@ -1,62 +1,81 @@
-# Creating PV is K8 admin job
+# ------------------------- #
+# 1. Persistent Volume (PV) #
+# ------------------------- #
+# Creating a PV is a K8s admin job. This binds directly to an existing EBS volume.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: ebs-static
+  name: ebs-static                 # Name of the PV
 spec:
   accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  - ReadWriteOnce                 # EBS supports RWO only (mounted by one node at a time)
+  persistentVolumeReclaimPolicy: Retain   # Do NOT delete EBS even if PVC is deleted
   capacity:
-    storage: 15Gi
+    storage: 15Gi                 # PV size (must match actual EBS volume)
   csi:
-    driver: ebs.csi.aws.com
-    fsType: ext4
-    volumeHandle: vol-04f6c32f5da15ea4d   # EBS in us-east-1a
+    driver: ebs.csi.aws.com       # AWS EBS CSI driver
+    fsType: ext4                  # File system used on the EBS volume
+    volumeHandle: vol-04f6c32f5da15ea4d   # EXISTING EBS Volume ID in us-east-1a
+                                           # Ensure that your Pod runs in same AZ
 ---
+# ------------------------------ #
+# 2. Persistent Volume Claim PVC #
+# ------------------------------ #
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ebs-static
+  name: ebs-static                # PVC name (claim)
 spec:
-  storageClassName: "" # Empty string must be explicitly set otherwise default StorageClass will be set
-  volumeName: ebs-static
+  storageClassName: ""            # IMPORTANT: Empty string = disable default StorageClass
+                                  # If this is missing, Kubernetes will try to dynamically
+                                  # create a new EBS instead of using the static PV
+  volumeName: ebs-static          # Bind to the specific PV above
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce               # Must match PV
   resources:
     requests:
-      storage: 15Gi
+      storage: 15Gi               # Must match or be <= PV size
 ---
+# ----------- #
+# 3. The Pod  #
+# ----------- #
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: nginx                      # Pod name
   labels:
-    purpose: ebs-static
+    purpose: ebs-static            # Label used by the Service to select this Pod
 spec:
   containers:
   - name: nginx
-    image: nginx
+    image: nginx                   # Nginx container
     volumeMounts:
     - name: nginx-html
-      mountPath: /usr/share/nginx/html
+      mountPath: /usr/share/nginx/html  # EBS volume will replace default Nginx HTML directory
   nodeSelector:
     topology.kubernetes.io/zone: us-east-1f
+                                      # ⚠ IMPORTANT:
+                                      # Pod is forced to run in us-east-1f
+                                      # BUT your EBS volume is in us-east-1a
+                                      # EBS CAN'T attach across zones → Pod will fail
   volumes:
   - name: nginx-html
     persistentVolumeClaim:
-      claimName: ebs-static
+      claimName: ebs-static             # Attach the PVC to the Pod
 ---
+# ------------------- #
+# 4. LoadBalancer SVC #
+# ------------------- #
 apiVersion: v1
 kind: Service
 metadata:
   name: nginx-ebs-static
 spec:
-  type: LoadBalancer
+  type: LoadBalancer                   # Creates an AWS ELB / NLB
   selector:
-    purpose: ebs-static
+    purpose: ebs-static                # Must match Pod label
   ports:
     - protocol: TCP
-      port: 80 # service port
-      targetPort: 80 # container port
-      nodePort: 30007 
+      port: 80                         # Service port exposed externally
+      targetPort: 80                   # Container port
+      nodePort: 30007                  # Only used internally for LoadBalancer type
