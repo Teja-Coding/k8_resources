@@ -26,8 +26,8 @@ spec:
     volumeMounts:
     - name: nginx-html
       mountPath: /usr/share/nginx/html  # EBS volume will replace default Nginx HTML directory
-  nodeSelector:
-    topology.kubernetes.io/zone: us-east-1f
+  # nodeSelector:
+  #   topology.kubernetes.io/zone: us-east-1f
                                       # ⚠ IMPORTANT:
                                       # Pod is forced to run in us-east-1f
                                       # BUT your EBS volume is in us-east-1a
