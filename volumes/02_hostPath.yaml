@@ -1,46 +1,53 @@
-apiVersion: apps/v1
-kind: DaemonSet
+apiVersion: apps/v1                   # Using the apps/v1 API for DaemonSet
+kind: DaemonSet                       # DaemonSet ensures 1 pod runs on every node
 metadata:
-  name: fluentd-elasticsearch
-  namespace: kube-system
+  name: fluentd-elasticsearch         # Name of the DaemonSet
+  namespace: kube-system              # Runs in kube-system namespace (system-level components)
   labels:
-    k8s-app: fluentd-logging
+    k8s-app: fluentd-logging          # Label used for organization and selection
+
 spec:
   selector:
     matchLabels:
-      name: fluentd-elasticsearch
+      name: fluentd-elasticsearch     # DaemonSet will manage pods with this label
+
   template:
     metadata:
       labels:
-        name: fluentd-elasticsearch
+        name: fluentd-elasticsearch   # Pod template label (must match selector)
     spec:
       tolerations:
-      # these tolerations are to have the daemonset runnable on control plane nodes
-      # remove them if your control plane nodes should not run pods
+        # Allow fluentd to run on control-plane/master nodes.
+        # Without these tolerations, Pods will *not* schedule on control-plane nodes.
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: NoSchedule
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
+
       containers:
       - name: fluentd-elasticsearch
-        image: quay.io/fluentd_elasticsearch/fluentd:v5.0.1
+        image: quay.io/fluentd_elasticsearch/fluentd:v5.0.1  # Fluentd image that ships logs to Elasticsearch
+
         resources:
           limits:
-            memory: 200Mi
+            memory: 200Mi               # Max memory allowed
           requests:
-            cpu: 100m
-            memory: 200Mi
+            cpu: 100m                   # Minimum CPU required
+            memory: 200Mi               # Minimum memory required
+
         volumeMounts:
         - name: varlog
-          mountPath: /var/log
-          readOnly: true
-      # it may be desirable to set a high priority class to ensure that a DaemonSet Pod
-      # preempts running Pods
+          mountPath: /var/log           # Mount host /var/log directory inside container
+          readOnly: true                # Fluentd should read logs only, not write
+
+      # Optional: set high priority so DaemonSet pods preempt others
       # priorityClassName: important
-      terminationGracePeriodSeconds: 30
+
+      terminationGracePeriodSeconds: 30   # Pod has 30 seconds to shut down gracefully
+
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log
+          path: /var/log                 # Host path containing node logs (kubelet, container logs, etc.)
