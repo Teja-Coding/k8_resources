@@ -1,0 +1,18 @@
+apiVersion: v1                    # PV uses core API group
+kind: PersistentVolume            # Creating a PersistentVolume (PV)
+metadata:
+  name: ebs-static                   # Name of the PV
+
+spec:
+  accessModes:
+  - ReadWriteOnce                 # Volume can be mounted by only ONE node at a time (RWO)
+
+  PersistentVolumeReclaimPolicy: retain   # Keep the volume even after PVC is deleted
+
+  capacity:
+    storage: 15Gi                 # Size of the volume
+
+  csi:
+    driver: ebs.csi.aws.com       # AWS EBS CSI (Container Storage Interface) driver
+    fsType: ext4                  # File system of the volume
+    volumeHandle: vol-0fc2f30bedd19f958   # Actual AWS EBS volume ID
