@@ -12,15 +12,15 @@ spec:
   csi:
     driver: ebs.csi.aws.com
     fsType: ext4
-    volumeHandle: vol-0770ee52b13b59f7d
+    volumeHandle: vol-0770ee52b13b59f7d   # EBS in us-east-1a
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: ebs-static-demo
 spec:
-  storageClassName: ""                       # IMPORTANT
-  volumeName: ebs-static-demo                     # Bind PVC to PV
+  storageClassName: ""                       # IMPORTANT: forces static binding
+  volumeName: ebs-static-demo                # Bind PVC to PV
   accessModes:
     - ReadWriteOnce
   resources:
@@ -41,7 +41,7 @@ spec:
     - name: nginx-html
       mountPath: /usr/share/nginx/html
   nodeSelector:
-    topology.kubernetes.io/zone: us-east-1a   # Matches the EBS volume AZ
+    topology.kubernetes.io/zone: us-east-1a   # Correct AZ for this EBS volume
   volumes:
   - name: nginx-html
     persistentVolumeClaim:
