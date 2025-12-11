@@ -12,7 +12,7 @@ spec:
   csi:
     driver: ebs.csi.aws.com
     fsType: ext4
-    volumeHandle: vol-0fc2f30bedd19f958
+    volumeHandle: vol-0770ee52b13b59f7d
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -41,7 +41,7 @@ spec:
     - name: nginx-html
       mountPath: /usr/share/nginx/html
   nodeSelector:
-    topology.kubernetes.io/zone: us-east-1f   # Matches the EBS volume AZ
+    topology.kubernetes.io/zone: us-east-1a   # Matches the EBS volume AZ
   volumes:
   - name: nginx-html
     persistentVolumeClaim:
