@@ -13,24 +13,24 @@ spec:
 
   csi:
     driver: ebs.csi.aws.com          # AWS EBS CSI driver
-    fsType: ext4                     # File system format
-    volumeHandle: vol-0fc2f30bedd19f958   # Actual AWS EBS volume ID (must already exist)
+    fsType: ext4                     # File system type
+    volumeHandle: vol-0fc2f30bedd19f958   # AWS EBS volume ID (must already exist)
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim          # PVC requested by the user/app
 metadata:
-  name: ebs-static                   # PVC name (will bind to PV of same name)
+  name: ebs-static                   # PVC name (binds to PV with same name)
 spec:
-  storageClassName: ""               # Must be empty to avoid default StorageClass binding
-  volumeName: ebs-static             # Explicitly bind to this PV
+  storageClassName: ""               # Required → prevents default StorageClass
+  volumeName: ebs-static             # Force PVC to bind to this PV
   accessModes:
-    - ReadWriteOnce                  # Must match the PV access mode
+    - ReadWriteOnce                  # Must match PV's RWO
   resources:
     requests:
-      storage: 15Gi                  # PVC requests same size as PV
+      storage: 15Gi                  # Request same storage size as PV
 ---
 apiVersion: v1
-kind: Pod                            # Pod that will use the PVC
+kind: Pod                            # Pod that uses the PVC
 metadata:
   name: nginx
 spec:
@@ -38,9 +38,13 @@ spec:
   - name: nginx
     image: nginx
     volumeMounts:
-    - name: nginx-html               # Volume name to mount inside container
+    - name: nginx-html               # Volume name inside pod
       mountPath: /usr/share/nginx/html   # NGINX default web directory
+
+  nodeSelector:                      # Ensures pod runs in same AZ as EBS volume
+    topology.kubernetes.io/zone: us-east-1f
+
   volumes:
-  - name: nginx-html                 # Declaring the volume for the pod
-    persistentVolumeClaim:           # Use PVC as the storage source
-      claimName: ebs-static          # PVC name to bind to
+  - name: nginx-html
+    persistentVolumeClaim:           # Mount the PVC
+      claimName: ebs-static          # Use the PVC created above
