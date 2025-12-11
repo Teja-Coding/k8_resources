@@ -16,3 +16,17 @@ spec:
     driver: ebs.csi.aws.com       # AWS EBS CSI driver
     fsType: ext4                  # Filesystem type
     volumeHandle: vol-0fc2f30bedd19f958   # Actual AWS EBS Volume ID
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-static
+spec:
+  storageClassName: "" # Empty string must be explicitly set otherwise default StorageClass will be set
+  volumeName: ebs-static
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
