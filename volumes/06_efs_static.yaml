@@ -25,3 +25,30 @@ spec:
   resources:
     requests:
       storage: 5Gi
+---
+# ----------- #
+# 3. The Pod  #
+# ----------- #
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx                      # Pod name
+  labels:
+    purpose: efs-static            # Label used by the Service to select this Pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx                   # Nginx container
+    volumeMounts:
+    - name: nginx-html
+      mountPath: /usr/share/nginx/html  # EBS volume will replace default Nginx HTML directory
+  # nodeSelector:
+  #   topology.kubernetes.io/zone: us-east-1f
+                                      # ⚠ IMPORTANT:
+                                      # Pod is forced to run in us-east-1f
+                                      # BUT your EBS volume is in us-east-1a
+                                      # EBS CAN'T attach across zones → Pod will fail
+  volumes:
+  - name: nginx-html
+    persistentVolumeClaim:
+      claimName: efs-static             # Attach the PVC to the Pod
